@@ -1,4 +1,4 @@
-name: Deploy to Koyeb
+name: Deploy Backend to Koyeb
 on:
   push:
     branches: [ main ]
@@ -7,11 +7,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy Backend to Koyeb
-        uses: koyeb/koyeb-deploy-action@v1
-        with:
-          api_token: ${{ secrets.KOYEB_API_TOKEN }}
-          app_name: magellan
-          service_name: backend
-          path: backend
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Koyeb CLI
+        run: |
+          curl -sSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64.tar.gz -o koyeb.tgz
+          tar -xzf koyeb.tgz
+          sudo mv koyeb /usr/local/bin/koyeb
+
+      - name: Login to Koyeb
+        run: koyeb auth login --token ${{ secrets.KOYEB_API_TOKEN }}
+
+      - name: Deploy to Koyeb
+        run: |
+          koyeb app update magellan --path backend || koyeb app create magellan --path backend
