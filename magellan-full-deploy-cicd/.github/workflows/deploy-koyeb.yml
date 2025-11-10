@@ -12,9 +12,11 @@ jobs:
 
       - name: Install Koyeb CLI
         run: |
-          curl -sSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64.tar.gz -o koyeb.tgz
-          tar -xzf koyeb.tgz
+          curl -sSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64 -o koyeb
+          chmod +x koyeb
           sudo mv koyeb /usr/local/bin/koyeb
+
+
 
       - name: Login to Koyeb
         run: koyeb auth login --token ${{ secrets.KOYEB_API_TOKEN }}
