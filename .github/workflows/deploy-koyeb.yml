@@ -1,0 +1,17 @@
+name: Deploy to Koyeb
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Backend to Koyeb
+        uses: koyeb/koyeb-deploy-action@v1
+        with:
+          api_token: ${{ secrets.KOYEB_API_TOKEN }}
+          app_name: magellan
+          service_name: backend
+          path: backend
