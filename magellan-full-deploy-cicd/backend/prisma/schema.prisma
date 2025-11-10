@@ -1,0 +1,130 @@
+
+// prisma/schema.prisma
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client { provider = "prisma-client-js" }
+
+enum UserRole { CUSTOMER ADMIN DRIVER }
+enum OrderStatus { PENDING CONFIRMED PREPARING READY_FOR_PICKUP OUT_FOR_DELIVERY DELIVERED CANCELED REFUNDED }
+enum PaymentStatus { PENDING PAID FAILED REFUNDED }
+enum DeliveryType { PICKUP DELIVERY }
+
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique
+  email         String?  @unique
+  name          String
+  role          UserRole @default(CUSTOMER)
+  passwordHash  String
+  addresses     Address[]
+  orders        Order[]  @relation("UserOrders")
+  createdAt     DateTime @default(now())
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  label     String
+  line1     String
+  city      String
+  lat       Float
+  lng       Float
+  isDefault Boolean @default(false)
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  nameAr    String
+  nameEn    String
+  imageUrl  String?
+  items     MenuItem[]
+  index     Int        @default(0)
+  isActive  Boolean    @default(true)
+}
+
+model MenuItem {
+  id            String        @id @default(cuid())
+  nameAr        String
+  nameEn        String
+  descAr        String?
+  descEn        String?
+  imageUrl      String?
+  basePrice     Int
+  isActive      Boolean       @default(true)
+  categoryId    String
+  category      Category      @relation(fields: [categoryId], references: [id])
+  optionGroups  OptionGroup[]
+}
+
+model OptionGroup {
+  id           String      @id @default(cuid())
+  titleAr      String
+  titleEn      String
+  minSelect    Int         @default(0)
+  maxSelect    Int         @default(1)
+  isRequired   Boolean     @default(false)
+  itemId       String
+  item         MenuItem    @relation(fields: [itemId], references: [id])
+  options      Option[]
+}
+
+model Option {
+  id          String      @id @default(cuid())
+  nameAr      String
+  nameEn      String
+  priceDelta  Int         @default(0)
+  groupId     String
+  group       OptionGroup @relation(fields: [groupId], references: [id])
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  percentage  Int?
+  fixedAmount Int?
+  minSubtotal Int?
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  status        OrderStatus   @default(PENDING)
+  items         OrderItem[]
+  subtotal      Int
+  discount      Int           @default(0)
+  deliveryFee   Int           @default(0)
+  total         Int
+  addressId     String?
+  deliveryType  DeliveryType  @default(DELIVERY)
+  payment       Payment?
+  driverId      String?
+  etaMinutes    Int?
+  createdAt     DateTime      @default(now())
+  user          User          @relation("UserOrders", fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  orderId     String
+  itemId      String
+  nameAr      String
+  nameEn      String
+  basePrice   Int
+  quantity    Int       @default(1)
+  optionsJson Json
+  order       Order     @relation(fields: [orderId], references: [id])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  orderId      String        @unique
+  provider     String
+  status       PaymentStatus @default(PENDING)
+  amount       Int
+  currency     String        @default("SAR")
+  providerRef  String?
+  createdAt    DateTime      @default(now())
+  order        Order         @relation(fields: [orderId], references: [id])
+}
