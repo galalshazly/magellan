@@ -1,14 +1,17 @@
-
 name: Deploy Flutter Web to Firebase
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -16,23 +19,21 @@ jobs:
           channel: stable
 
       - name: Enable web & install deps
-  run: |
-    flutter config --enable-web
-    cd magellan-full-deploy-cicd/mobile
-    flutter pub get
+        run: |
+          flutter config --enable-web
+          cd magellan-full-deploy-cicd/mobile
+          flutter pub get
 
-- name: Build Flutter Web
-  env:
-    API_BASE: https://magellan.koyeb.app/api
-    SOCKET_BASE: https://magellan.koyeb.app
-  run: |
-    cd magellan-full-deploy-cicd/mobile
-    flutter build web --dart-define=API_BASE=${{ env.API_BASE }} --dart-define=SOCKET_BASE=${{ env.SOCKET_BASE }}
-    mkdir -p ../web/build
-    rm -rf ../web/build/web
-    cp -r build/web ../web/build/web
-
-
+      - name: Build Flutter Web
+        env:
+          API_BASE: https://magellan.koyeb.app/api
+          SOCKET_BASE: https://magellan.koyeb.app
+        run: |
+          cd magellan-full-deploy-cicd/mobile
+          flutter build web --dart-define=API_BASE=${{ env.API_BASE }} --dart-define=SOCKET_BASE=${{ env.SOCKET_BASE }}
+          mkdir -p ../web/build
+          rm -rf ../web/build/web
+          cp -r build/web ../web/build/web
 
       - name: Deploy to Firebase Hosting
         uses: w9jds/firebase-action@v2.2.0
